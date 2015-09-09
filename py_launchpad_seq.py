@@ -18,8 +18,6 @@ class MidiInputHandler(object):
     def __call__(self, event, data=None):
         message, deltatime = event
 
-        print(message)
-
         note_num = message[1]
 
         if message[0] == 144 and message[2] == 127:
