@@ -9,8 +9,9 @@ bpm = 110
 
 
 class MidiInputHandler(object):
-    def __init__(self, midi_out):
+    def __init__(self, midi_out, note_out):
         self.midi_out = midi_out
+        self.note_out = note_out
         self.clear()
         # Initialize a 2d list to keep track of the state of every button
         self.button_states = [[0 for i in range(n_col)] for j in range(n_row)]
@@ -45,12 +46,17 @@ class MidiInputHandler(object):
     def send_tick(self, note_num, state):
         green = 3
 
+        col = note_num % 16
+        row = note_num / 16
+
         if state == 1:
             self.midi_out.send_message([144, note_num, green << 4])
-        else:
-            col = note_num % 16
-            row = note_num / 16
 
+            if self.button_states[row][col]:
+                self.note_out.send_message([144, 38, 120])
+                time.sleep(0.01)
+                self.note_out.send_message([144, 38, 0])
+        else:
             if self.button_states[row][col] == 1:
                 # This button is currently on
                 self.midi_out.send_message([144, note_num, 127])
@@ -68,7 +74,11 @@ if __name__ == '__main__':
     midi_out, midi_out_name = rtmidi.midiutil.open_midiport(port='Launchpad', type_='output')
     print('Opening port \'{0}\' for output'.format(midi_out_name))
 
-    midi_input_handler = MidiInputHandler(midi_out) 
+    # Get outputs that contain the string 'loopMIDI'
+    note_out, note_out_name = rtmidi.midiutil.open_midiport(port='loopMIDI', type_='output')
+    print('Opening port \'{0}\' for output'.format(note_out_name))
+
+    midi_input_handler = MidiInputHandler(midi_out, note_out) 
 
     midi_in.set_callback(midi_input_handler)
 
