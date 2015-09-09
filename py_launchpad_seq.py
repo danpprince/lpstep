@@ -73,7 +73,7 @@ if __name__ == '__main__':
     midi_in.set_callback(midi_input_handler)
 
     # Set the period in seconds for one sixteenth note
-    period_sec = 1.0/bpm * 60 / 4
+    period_sec = 1.0/bpm * 60 / 8
     row = 0
     col = 0
 
