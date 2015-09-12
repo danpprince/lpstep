@@ -2,6 +2,8 @@ import rtmidi
 import rtmidi.midiutil as midiutil
 import time
 
+import drumsequencer
+
 n_col = 8
 n_row = 8
 
@@ -12,9 +14,8 @@ class MidiNoteHandler(object):
     def __init__(self, lp_midi_out, drum_note_out):
         self.lp_midi_out = lp_midi_out
         self.drum_note_out = drum_note_out
+        self.drum_sequencer = drumsequencer.DrumSequencer(64, drum_note_out)
         self.clear()
-        # Initialize a 2d list to keep track of the state of every button
-        self.button_states = [[0 for i in range(n_col)] for j in range(n_row)]
 
     def __call__(self, event, data=None):
         message, deltatime = event
@@ -25,17 +26,19 @@ class MidiNoteHandler(object):
             col = note_num % 16
             row = note_num / 16
 
+            step_num = row*16 + col
+
             if col == 8 and row == 7:
                 # Reset the grid
                 self.clear()
-                self.button_states = [[0 for i in range(n_col)] for j in range(n_row)]
-            elif col < 8 and self.button_states[row][col] == 1:
+                self.drum_sequencer.clear()
+            elif col < 8 and self.drum_sequencer.query(8*row + col):
                 # This button is currently on, turn it off
-                self.button_states[row][col] = 0
+                self.drum_sequencer.toggle(8*row + col)
                 self.lp_midi_out.send_message([144, note_num, 0])
             elif col < 8:
                 # This button is currently off, turn it on
-                self.button_states[row][col] = 1
+                self.drum_sequencer.toggle(8*row + col)
                 self.lp_midi_out.send_message([144, note_num, 127])
 
     def clear(self):
@@ -52,12 +55,12 @@ class MidiNoteHandler(object):
         if state == 1:
             self.lp_midi_out.send_message([144, note_num, green << 4])
 
-            if self.button_states[row][col]:
+            if self.drum_sequencer.query(8*row + col):
                 self.drum_note_out.send_message([144, 38, 120])
                 time.sleep(0.01)
                 self.drum_note_out.send_message([144, 38, 0])
         else:
-            if self.button_states[row][col] == 1:
+            if self.drum_sequencer.query(8*row + col):
                 # This button is currently on
                 self.lp_midi_out.send_message([144, note_num, 127])
             else:
