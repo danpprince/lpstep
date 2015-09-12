@@ -11,6 +11,18 @@ class DrumSequencer(object):
         return self.step_states
 
     def query(self, step):
+        """query(query_step)
+
+        Return the note number of this DrumSequencer if the query step 
+        is activated.
+
+        Parameters:
+        step - The step to query the note state of in the range of 0 to 
+        sequence_length-1
+
+        Returns the note number assigned to this object if the query step is
+        activated in this object, or zero if the step is not activated.
+        """
         if self.step_states[step]:
             return self.note_num
         else:
