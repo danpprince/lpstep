@@ -15,3 +15,6 @@ class DrumSequencer(object):
             return self.note_num
         else:
             return 0
+
+    def clear(self):
+        self.step_states = [False for i in range(self.sequence_length)]
