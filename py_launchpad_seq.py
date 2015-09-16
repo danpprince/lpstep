@@ -2,10 +2,10 @@ import rtmidi
 import rtmidi.midiutil as midiutil
 import time
 
-import drumsequencer
+from drumsequencer import DrumSequencer
 
 n_col = 8
-n_row = 8
+n_row = 4
 
 bpm = 110
 
@@ -14,7 +14,7 @@ class MidiNoteHandler(object):
     def __init__(self, lp_midi_out, drum_note_out):
         self.lp_midi_out = lp_midi_out
         self.drum_note_out = drum_note_out
-        self.drum_sequencer = drumsequencer.DrumSequencer(64, drum_note_out)
+        self.drum_sequencers = [DrumSequencer(32, 38+i) for i in range(2)]
         self.clear()
 
     def __call__(self, event, data=None):
@@ -31,15 +31,26 @@ class MidiNoteHandler(object):
             if col == 8 and row == 7:
                 # Reset the grid
                 self.clear()
-                self.drum_sequencer.clear()
-            elif col < 8 and self.drum_sequencer.query(8*row + col):
-                # This button is currently on, turn it off
-                self.drum_sequencer.toggle(8*row + col)
-                self.lp_midi_out.send_message([144, note_num, 0])
-            elif col < 8:
-                # This button is currently off, turn it on
-                self.drum_sequencer.toggle(8*row + col)
-                self.lp_midi_out.send_message([144, note_num, 127])
+                for ds in self.drum_sequencers:
+                    ds.clear()
+            elif row < 4:
+                if self.drum_sequencers[0].query(8*row + col):
+                    # This button is currently on, turn it off
+                    self.drum_sequencers[0].toggle(8*row + col)
+                    self.lp_midi_out.send_message([144, note_num, 0])
+                else:
+                    # This button is currently off, turn it on
+                    self.drum_sequencers[0].toggle(8*row + col)
+                    self.lp_midi_out.send_message([144, note_num, 127])
+            else:
+                if self.drum_sequencers[1].query(8*(row-4) + col):
+                    # This button is currently on, turn it off
+                    self.drum_sequencers[1].toggle(8*(row-4) + col)
+                    self.lp_midi_out.send_message([144, note_num, 0])
+                else:
+                    # This button is currently off, turn it on
+                    self.drum_sequencers[1].toggle(8*(row-4) + col)
+                    self.lp_midi_out.send_message([144, note_num, 127])
 
     def clear(self):
         # All LEDs are turned off, and the mapping mode, buffer settings, and 
@@ -53,19 +64,32 @@ class MidiNoteHandler(object):
         row = note_num / 16
 
         if state == 1:
-            self.lp_midi_out.send_message([144, note_num, green << 4])
+            self.lp_midi_out.send_message([144, note_num,      green << 4])
+            self.lp_midi_out.send_message([144, note_num + 64, green << 4])
 
-            if self.drum_sequencer.query(8*row + col):
-                self.drum_note_out.send_message([144, 38, 120])
+            if self.drum_sequencers[0].query(8*row + col):
+                self.drum_note_out.send_message([144, self.drum_sequencers[0].query(8*row + col), 120])
                 time.sleep(0.01)
-                self.drum_note_out.send_message([144, 38, 0])
+                self.drum_note_out.send_message([144, self.drum_sequencers[0].query(8*row + col), 0])
+
+            if self.drum_sequencers[1].query(8*row + col):
+                self.drum_note_out.send_message([144, self.drum_sequencers[1].query(8*row + col), 120])
+                time.sleep(0.01)
+                self.drum_note_out.send_message([144, self.drum_sequencers[1].query(8*row + col), 0])
         else:
-            if self.drum_sequencer.query(8*row + col):
+            if self.drum_sequencers[0].query(8*row + col):
                 # This button is currently on
                 self.lp_midi_out.send_message([144, note_num, 127])
             else:
                 # This button is currently off
                 self.lp_midi_out.send_message([144, note_num, 0])
+
+            if self.drum_sequencers[1].query(8*row + col):
+                # This button is currently on
+                self.lp_midi_out.send_message([144, note_num + 64, 127])
+            else:
+                # This button is currently off
+                self.lp_midi_out.send_message([144, note_num + 64, 0])
 
 
 if __name__ == '__main__':
