@@ -14,7 +14,7 @@ class MidiNoteHandler(object):
     def __init__(self, lp_midi_out, drum_note_out):
         self.lp_midi_out = lp_midi_out
         self.drum_note_out = drum_note_out
-        self.drum_sequencers = [DrumSequencer(32, 38+i) for i in range(2)]
+        self.drum_sequencers = [DrumSequencer([0+4*i, 3+4*i], 32, 38+i) for i in range(2)]
         self.clear()
 
     def __call__(self, event, data=None):
@@ -26,31 +26,22 @@ class MidiNoteHandler(object):
             col = note_num % 16
             row = note_num / 16
 
-            step_num = row*16 + col
-
             if col == 8 and row == 7:
                 # Reset the grid
                 self.clear()
                 for ds in self.drum_sequencers:
                     ds.clear()
-            elif row < 4:
-                if self.drum_sequencers[0].query(8*row + col):
-                    # This button is currently on, turn it off
-                    self.drum_sequencers[0].toggle(8*row + col)
-                    self.lp_midi_out.send_message([144, note_num, 0])
-                else:
-                    # This button is currently off, turn it on
-                    self.drum_sequencers[0].toggle(8*row + col)
-                    self.lp_midi_out.send_message([144, note_num, 127])
             else:
-                if self.drum_sequencers[1].query(8*(row-4) + col):
-                    # This button is currently on, turn it off
-                    self.drum_sequencers[1].toggle(8*(row-4) + col)
-                    self.lp_midi_out.send_message([144, note_num, 0])
-                else:
-                    # This button is currently off, turn it on
-                    self.drum_sequencers[1].toggle(8*(row-4) + col)
-                    self.lp_midi_out.send_message([144, note_num, 127])
+                for ds in self.drum_sequencers:
+                    if ds.in_range(row):
+                        if ds.query(8*row + col):
+                            # This button is currently on, turn it off
+                            ds.toggle(8*row + col)
+                            self.lp_midi_out.send_message([144, note_num, 0])
+                        else:
+                            # This button is currently off, turn it on
+                            ds.toggle(8*row + col)
+                            self.lp_midi_out.send_message([144, note_num, 127])
 
     def clear(self):
         # All LEDs are turned off, and the mapping mode, buffer settings, and 
@@ -67,15 +58,12 @@ class MidiNoteHandler(object):
             self.lp_midi_out.send_message([144, note_num,      green << 4])
             self.lp_midi_out.send_message([144, note_num + 64, green << 4])
 
-            if self.drum_sequencers[0].query(8*row + col):
-                self.drum_note_out.send_message([144, self.drum_sequencers[0].query(8*row + col), 120])
-                time.sleep(0.01)
-                self.drum_note_out.send_message([144, self.drum_sequencers[0].query(8*row + col), 0])
+            for ds in self.drum_sequencers:
+                if ds.query(8*row + col):
+                    self.drum_note_out.send_message([144, ds.query(8*row + col), 120])
+                    time.sleep(0.01)
+                    self.drum_note_out.send_message([144, ds.query(8*row + col), 0])
 
-            if self.drum_sequencers[1].query(8*row + col):
-                self.drum_note_out.send_message([144, self.drum_sequencers[1].query(8*row + col), 120])
-                time.sleep(0.01)
-                self.drum_note_out.send_message([144, self.drum_sequencers[1].query(8*row + col), 0])
         else:
             if self.drum_sequencers[0].query(8*row + col):
                 # This button is currently on
