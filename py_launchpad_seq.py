@@ -11,9 +11,8 @@ bpm = 110
 
 
 class MidiInputController(object):
-    def __init__(self, sequencer_models, drum_note_out):
+    def __init__(self, sequencer_models):
         self.sequencer_models = sequencer_models
-        self.drum_note_out    = drum_note_out
 
     def __call__(self, event, data=None):
         message, deltatime = event
@@ -48,8 +47,7 @@ if __name__ == '__main__':
         s_m = SequencerModel([0+4*i, 3+4*i], 32, 38+i)
         sequencer_models.append(s_m)
 
-    midi_input_controller = MidiInputController(sequencer_models, drum_note_out) 
-
+    midi_input_controller = MidiInputController(sequencer_models) 
 
     midi_in.set_callback(midi_input_controller)
 
