@@ -1,4 +1,4 @@
-from lpview import LpView
+import lpview
 
 class SequencerModel(object):
     def __init__(self, rows, sequence_length, note_num):
@@ -8,7 +8,7 @@ class SequencerModel(object):
 
         self.step_states = [False for i in range(sequence_length)]
 
-        self.view = LpView('Launchpad', rows)
+        self.view = lpview.LpView('Launchpad', rows)
 
     def set_view(self, view):
         self.view = view
@@ -31,3 +31,13 @@ class SequencerModel(object):
     def clear(self):
         self.step_states = [False for i in range(self.sequence_length)]
         self.view.clear()
+
+    def tick(self, step, state):
+        step = self.rows[0]*8 + step
+
+        if state:
+            self.view.tick(step, lpview.NOTE_PLAYING)
+        elif self.step_states[step % self.sequence_length]:
+            self.view.tick(step, lpview.NOTE_ON)
+        else:
+            self.view.tick(step, lpview.NOTE_OFF)
