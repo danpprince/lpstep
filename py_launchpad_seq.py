@@ -38,13 +38,13 @@ if __name__ == '__main__':
     print('Opening port \'{0}\' for input'.format(midi_in_name))
 
     # Get outputs that contain the string 'loopMIDI'
-    drum_note_out, drum_note_out_name = midiutil.open_midiport(port='loopMIDI', type_='output')
-    print('Opening port \'{0}\' for output'.format(drum_note_out_name))
+    drum_out, drum_out_name = midiutil.open_midiport(port='loopMIDI', type_='output')
+    print('Opening port \'{0}\' for output'.format(drum_out_name))
 
     # Initialize sequencer models
     sequencer_models = []
     for i in range(2):
-        s_m = SequencerModel([0+4*i, 3+4*i], 32, 38+i)
+        s_m = SequencerModel([0+4*i, 3+4*i], 32, 38+i, drum_out)
         sequencer_models.append(s_m)
 
     midi_input_controller = MidiInputController(sequencer_models) 

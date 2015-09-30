@@ -1,10 +1,11 @@
 import lpview
 
 class SequencerModel(object):
-    def __init__(self, rows, sequence_length, note_num):
+    def __init__(self, rows, sequence_length, note_num, drum_out):
         self.rows = rows
         self.sequence_length = sequence_length
         self.note_num = note_num
+        self.drum_out = drum_out
 
         self.step_states = [False for i in range(sequence_length)]
 
@@ -39,5 +40,7 @@ class SequencerModel(object):
             self.view.tick(step, lpview.NOTE_PLAYING)
         elif self.step_states[step % self.sequence_length]:
             self.view.tick(step, lpview.NOTE_ON)
+            self.drum_out.send_message([144, self.note_num, 127])
         else:
             self.view.tick(step, lpview.NOTE_OFF)
+            self.drum_out.send_message([144, self.note_num, 0])
