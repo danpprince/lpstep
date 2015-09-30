@@ -2,7 +2,7 @@ import rtmidi
 import rtmidi.midiutil as midiutil
 import time
 
-from drumsequencer import DrumSequencer
+from sequencermodel import SequencerModel
 
 n_col = 8
 n_row = 4
@@ -10,12 +10,9 @@ n_row = 4
 bpm = 110
 
 
-class MidiNoteHandler(object):
-    def __init__(self, lp_midi_out, drum_note_out):
-        self.lp_midi_out = lp_midi_out
-        self.drum_note_out = drum_note_out
-        self.drum_sequencers = [DrumSequencer([0+4*i, 3+4*i], 32, 38+i) for i in range(2)]
-        self.clear()
+class MidiInputController(object):
+    def __init__(self, sequencer_models):
+        self.sequencer_models = sequencer_models
 
     def __call__(self, event, data=None):
         message, deltatime = event
@@ -28,93 +25,49 @@ class MidiNoteHandler(object):
 
             if col == 8 and row == 7:
                 # Reset the grid
-                self.clear()
-                for ds in self.drum_sequencers:
-                    ds.clear()
+                for sm in self.sequencer_models:
+                    sm.clear()
             else:
-                for ds in self.drum_sequencers:
-                    if ds.in_range(row):
-                        if ds.query(8*row + col):
-                            # This button is currently on, turn it off
-                            ds.toggle(8*row + col)
-                            self.lp_midi_out.send_message([144, note_num, 0])
-                        else:
-                            # This button is currently off, turn it on
-                            ds.toggle(8*row + col)
-                            self.lp_midi_out.send_message([144, note_num, 127])
-
-    def clear(self):
-        # All LEDs are turned off, and the mapping mode, buffer settings, and 
-        # duty cycle are reset to their default values. 
-        self.lp_midi_out.send_message([176, 0, 0])
-
-    def send_tick(self, note_num, state):
-        green = 3
-
-        col = note_num % 16
-        row = note_num / 16
-
-        if state == 1:
-            self.lp_midi_out.send_message([144, note_num,      green << 4])
-            self.lp_midi_out.send_message([144, note_num + 64, green << 4])
-
-            for ds in self.drum_sequencers:
-                if ds.query(8*row + col):
-                    self.drum_note_out.send_message([144, ds.query(8*row + col), 120])
-                    time.sleep(0.01)
-                    self.drum_note_out.send_message([144, ds.query(8*row + col), 0])
-
-        else:
-            if self.drum_sequencers[0].query(8*row + col):
-                # This button is currently on
-                self.lp_midi_out.send_message([144, note_num, 127])
-            else:
-                # This button is currently off
-                self.lp_midi_out.send_message([144, note_num, 0])
-
-            if self.drum_sequencers[1].query(8*row + col):
-                # This button is currently on
-                self.lp_midi_out.send_message([144, note_num + 64, 127])
-            else:
-                # This button is currently off
-                self.lp_midi_out.send_message([144, note_num + 64, 0])
-
+                for sm in self.sequencer_models:
+                    if sm.in_range(row):
+                        sm.toggle(8*row + col)
 
 if __name__ == '__main__':
     # Get inputs that contain the string 'Launchpad'
     midi_in, midi_in_name = midiutil.open_midiport(port='Launchpad', type_='input')
     print('Opening port \'{0}\' for input'.format(midi_in_name))
 
-    # Get outputs that contain the string 'Launchpad'
-    lp_midi_out, lp_midi_out_name = midiutil.open_midiport(port='Launchpad', type_='output')
-    print('Opening port \'{0}\' for output'.format(lp_midi_out_name))
-
     # Get outputs that contain the string 'loopMIDI'
-    drum_note_out, drum_note_out_name = midiutil.open_midiport(port='loopMIDI', type_='output')
-    print('Opening port \'{0}\' for output'.format(drum_note_out_name))
+    drum_out, drum_out_name = midiutil.open_midiport(port='loopMIDI', type_='output')
+    print('Opening port \'{0}\' for output'.format(drum_out_name))
 
-    midi_note_handler = MidiNoteHandler(lp_midi_out, drum_note_out) 
+    # Initialize sequencer models
+    sequencer_models = []
+    for i in range(2):
+        s_m = SequencerModel([0+4*i, 3+4*i], 32, 38+i, drum_out)
+        sequencer_models.append(s_m)
 
-    midi_in.set_callback(midi_note_handler)
+    midi_input_controller = MidiInputController(sequencer_models) 
+
+    midi_in.set_callback(midi_input_controller)
 
     # Set the period in seconds for one sixteenth note
     period_sec = 1.0/bpm * 60 / 8
-    row = 0
-    col = 0
+
+    step = 0
+    num_steps = 32
 
     while True:
         # Step through each button at the specified bpm
 
-        midi_note_handler.send_tick(row*16 + col, 1)
+        for sm in sequencer_models:
+            sm.tick(step, 1)
+
         time.sleep(0.1)
-        midi_note_handler.send_tick(row*16 + col, 0)
 
-        col = col + 1
-        if col >= n_col:
-            col = 0
-            row = row + 1
+        for sm in sequencer_models:
+            sm.tick(step, 0)
 
-        if row >= n_row:
-            row = 0
+        step = (step + 1) % num_steps
 
         time.sleep(period_sec)
