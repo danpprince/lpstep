@@ -26,13 +26,18 @@ class LpView(object):
         else:
             LpView.lp_midi_out.send_message([144, note_num, 0])
 
-    def tick(self, row, col, state):
-        note_num = row*16 + col
+    def tick(self, step, state):
+        step_row = step / 8
+        step_col = step % 8
 
-        if state:
-            LpView.lp_midi_out.send_message([144, note_num, green << 4])
+        note_num = step_row*16 + step_col
+
+        if state == NOTE_PLAYING:
+            LpView.lp_midi_out.send_message([144, note_num, 2 << 4])
+        elif state == NOTE_ON:
+            LpView.lp_midi_out.send_message([144, note_num, 127])
         else:
-            LpView.lp_midi_out.send_message([144, note_num, ])
+            LpView.lp_midi_out.send_message([144, note_num, 0])
 
     def clear(self):
         # All LEDs are turned off, and the mapping mode, buffer settings, and 
