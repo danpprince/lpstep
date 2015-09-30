@@ -55,18 +55,21 @@ if __name__ == '__main__':
 
     # Set the period in seconds for one sixteenth note
     period_sec = 1.0/bpm * 60 / 8
-    row = 0
-    col = 0
+
+    step = 0
+    num_steps = 32
 
     while True:
         # Step through each button at the specified bpm
 
-        col = col + 1
-        if col >= n_col:
-            col = 0
-            row = row + 1
+        for sm in sequencer_models:
+            sm.tick(step, 1)
 
-        if row >= n_row:
-            row = 0
+        time.sleep(0.1)
+
+        for sm in sequencer_models:
+            sm.tick(step, 0)
+
+        step = (step + 1) % num_steps
 
         time.sleep(period_sec)
