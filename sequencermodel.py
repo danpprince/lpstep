@@ -1,5 +1,6 @@
-class DrumSequencer(object):
+from lpview import LpView
 
+class SequencerModel(object):
     def __init__(self, rows, sequence_length, note_num):
         self.rows = rows
         self.sequence_length = sequence_length
@@ -7,8 +8,15 @@ class DrumSequencer(object):
 
         self.step_states = [False for i in range(sequence_length)]
 
+        self.view = LpView('Launchpad', rows)
+
+    def set_view(self, view):
+        self.view = view
+
     def toggle(self, step):
-        self.step_states[step % self.sequence_length] = not self.step_states[step % self.sequence_length]
+        step_state = not self.step_states[step % self.sequence_length]
+        self.step_states[step % self.sequence_length] = step_state
+        self.view.update(step, step_state)
         return self.step_states
 
     def in_range(self, row):
@@ -22,3 +30,4 @@ class DrumSequencer(object):
 
     def clear(self):
         self.step_states = [False for i in range(self.sequence_length)]
+        self.view.clear()
