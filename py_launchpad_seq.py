@@ -30,10 +30,12 @@ if __name__ == '__main__':
     midi_in.set_callback(midi_input_controller)
 
     # Set the period in seconds for one sixteenth note
-    period_sec = 1.0/bpm * 60 / 8
+    period_sec = 60.0/bpm / 4
+
+    note_len_sec = 0.04
 
     step = 0
-    num_steps = 32
+    max_num_steps = 32
 
     while True:
         # Step through each button at the specified bpm
@@ -41,11 +43,11 @@ if __name__ == '__main__':
         for sm in sequencer_models:
             sm.tick(step, 1)
 
-        time.sleep(0.1)
+        time.sleep(note_len_sec)
 
         for sm in sequencer_models:
             sm.tick(step, 0)
 
-        step = (step + 1) % num_steps
+        step = (step + 1) % max_num_steps
 
-        time.sleep(period_sec)
+        time.sleep(period_sec - note_len_sec)
