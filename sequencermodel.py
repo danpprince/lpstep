@@ -21,7 +21,10 @@ class SequencerModel(object):
         return self.step_states
 
     def in_range(self, row):
-        return self.rows[0] <= row and row <= self.rows[1]
+        if len(self.rows) == 1:
+            return self.rows[0] == row
+        else:
+            return self.rows[0] <= row and row <= self.rows[1]
 
     def query(self, step):
         if self.step_states[step % self.sequence_length]:
