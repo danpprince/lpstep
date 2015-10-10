@@ -23,7 +23,8 @@ if __name__ == '__main__':
     # Initialize sequencer models
     sequencer_models = [SequencerModel([0, 3], 32, 38, drum_out),
                         SequencerModel([4, 5], 16, 39, drum_out),
-                        SequencerModel([6, 7], 16, 42, drum_out)]
+                        SequencerModel(   [6],  8, 41, drum_out),
+                        SequencerModel(   [7],  8, 42, drum_out)]
 
     midi_input_controller = MidiInputController(sequencer_models) 
 
