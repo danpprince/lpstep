@@ -34,7 +34,7 @@ class SequencerModel(object):
         self.view.clear()
 
     def tick(self, step, state):
-        step = self.rows[0]*8 + step
+        step = self.rows[0]*8 + (step % self.sequence_length)
 
         if state:
             self.view.tick(step, lpview.NOTE_PLAYING)
