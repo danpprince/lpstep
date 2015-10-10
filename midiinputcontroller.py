@@ -11,10 +11,11 @@ class MidiInputController(object):
             col = note_num % 16
             row = note_num / 16
 
-            if col == 8 and row == 7:
-                # Reset the grid
+            if col == 8:
+                # Mute the sequencer in this row
                 for sm in self.sequencer_models:
-                    sm.clear()
+                    if sm.in_range(row):
+                        sm.mute_toggle()
             else:
                 for sm in self.sequencer_models:
                     if sm.in_range(row):

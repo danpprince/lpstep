@@ -1,8 +1,9 @@
 import rtmidi.midiutil as midiutil
 
 NOTE_OFF     = 0
-NOTE_ON      = 1
-NOTE_PLAYING = 2
+NOTE_MUTED   = 1
+NOTE_ON      = 2
+NOTE_PLAYING = 3
 
 class LpView(object):
     # Get outputs that contain the string 'Launchpad'
@@ -21,21 +22,12 @@ class LpView(object):
 
         note_num = step_row*16 + step_col
 
-        if state:
-            LpView.lp_midi_out.send_message([144, note_num, 127])
-        else:
-            LpView.lp_midi_out.send_message([144, note_num, 0])
-
-    def tick(self, step, state):
-        step_row = step / 8
-        step_col = step % 8
-
-        note_num = step_row*16 + step_col
-
         if state == NOTE_PLAYING:
             LpView.lp_midi_out.send_message([144, note_num, 2 << 4])
         elif state == NOTE_ON:
             LpView.lp_midi_out.send_message([144, note_num, 127])
+        elif state == NOTE_MUTED:
+            LpView.lp_midi_out.send_message([144, note_num, 13])
         else:
             LpView.lp_midi_out.send_message([144, note_num, 0])
 
