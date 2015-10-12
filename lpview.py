@@ -31,6 +31,26 @@ class LpView(object):
         else:
             LpView.lp_midi_out.send_message([144, note_num, 0])
 
+    def mute_display(self, state, rows):
+        if len(rows) == 2:
+            for row in range(rows[0], rows[1]+1):
+                step_col = 8
+                note_num = row*16 + step_col
+
+                if state:
+                    LpView.lp_midi_out.send_message([144, note_num, 13])
+                else:
+                    LpView.lp_midi_out.send_message([144, note_num, 0])
+
+        elif len(rows) == 1:
+            step_col = 8
+            note_num = rows[0]*16 + step_col
+
+            if state:
+                LpView.lp_midi_out.send_message([144, note_num, 13])
+            else:
+                LpView.lp_midi_out.send_message([144, note_num, 0])
+
     def clear(self):
         # All LEDs are turned off, and the mapping mode, buffer settings, and 
         # duty cycle are reset to their default values. 

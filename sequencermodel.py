@@ -31,6 +31,9 @@ class SequencerModel(object):
 
     def mute_toggle(self):
         self.muted = not self.muted
+
+        self.view.mute_display(self.muted, self.rows)
+
         # Update all steps in the view
         for step_idx, step in enumerate(self.step_states):
             step_idx = self.rows[0]*8 + (step_idx % self.sequence_length)
