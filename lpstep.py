@@ -5,10 +5,7 @@ import time
 from midiinputcontroller import MidiInputController
 from sequencermodel import SequencerModel
 
-n_col = 8
-n_row = 4
-
-bpm = 110
+bpm = 100
 
 
 if __name__ == '__main__':
