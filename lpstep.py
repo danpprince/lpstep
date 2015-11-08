@@ -4,6 +4,7 @@ import time
 
 from midiinputcontroller import MidiInputController
 from sequencermodel import SequencerModel
+import sequencermodel
 
 bpm = 100
 
@@ -36,16 +37,18 @@ if __name__ == '__main__':
     max_num_steps = 32
 
     while True:
-        # Step through each button at the specified bpm
+        if sequencermodel.sequencer_playing:
+            # Step through each button at the specified bpm
+            for sm in sequencer_models:
+                sm.tick(step, True)
 
-        for sm in sequencer_models:
-            sm.tick(step, True)
+            time.sleep(note_len_sec)
 
-        time.sleep(note_len_sec)
+            for sm in sequencer_models:
+                sm.tick(step, False)
 
-        for sm in sequencer_models:
-            sm.tick(step, False)
+            step = (step + 1) % max_num_steps
 
-        step = (step + 1) % max_num_steps
-
-        time.sleep(period_sec - note_len_sec)
+            time.sleep(period_sec - note_len_sec)
+        else:
+            step = 0

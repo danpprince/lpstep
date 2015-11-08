@@ -1,5 +1,15 @@
 import lpview
 
+sequencer_playing = False
+
+global_view = lpview.GlobalLpView()
+
+def toggle_playing():
+    global sequencer_playing
+    sequencer_playing = not sequencer_playing
+
+    global_view.display_playing(sequencer_playing)
+    
 class SequencerModel(object):
     def __init__(self, rows, sequence_length, note_num, drum_out):
         self.rows = rows
@@ -11,7 +21,7 @@ class SequencerModel(object):
 
         self.muted = False
 
-        self.view = lpview.LpView('Launchpad', rows)
+        self.view = lpview.LpView(rows)
 
     def set_view(self, view):
         self.view = view
