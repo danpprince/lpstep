@@ -40,12 +40,12 @@ if __name__ == '__main__':
         if sequencermodel.sequencer_playing:
             # Step through each button at the specified bpm
             for sm in sequencer_models:
-                sm.tick(step, True)
+                sm.start_note(step)
 
             time.sleep(note_len_sec)
 
             for sm in sequencer_models:
-                sm.tick(step, False)
+                sm.stop_note()
 
             step = (step + 1) % max_num_steps
 

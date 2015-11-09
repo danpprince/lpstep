@@ -18,7 +18,7 @@ def toggle_randomize():
     global_view.display_randomize(randomize)
     
 class SequencerModel(object):
-    randomized_step = None
+    playing_step = None
 
     def __init__(self, rows, sequence_length, note_num, drum_out):
         self.rows = rows
@@ -78,44 +78,39 @@ class SequencerModel(object):
         self.step_states = [False for i in range(self.sequence_length)]
         self.view.clear()
 
-    def tick(self, step, state):
+    def stop_note(self):
+        # Action only required if this sequencer is currently playing a step
+        if self.playing_step is None:
+            return
+
+        step = self.playing_step
+        step_state = self.step_states[step % self.sequence_length]
+
+        if step_state and not self.muted:
+            self.view.update(step, lpview.NOTE_ON)
+            self.drum_out.send_message([144, self.note_num, 0])
+        elif step_state and self.muted:
+            self.view.update(step, lpview.NOTE_MUTED)
+        elif not step_state:
+            self.view.update(step, lpview.NOTE_OFF)
+
+        self.playing_step = None
+
+    def start_note(self, step):
         if not randomize:
             step = self.rows[0]*8 + (step % self.sequence_length)
         else:
-            # If this tick is indicating the start state for the step, create a random
-            # step and save it in self.randomized_step
-            if state:
-                self.randomized_step = self.rows[0]*8 + random.randint(0, self.sequence_length-1)
-                step = self.randomized_step
-
-            # If this tick is indicating the stop state for the step and a randomized_step
-            # has previously been created, use the previously created randomized_step for step
-            # in order to send the corresponding note off.
-            elif self.randomized_step:
-                step = self.randomized_step
-
-            # If this tick is indicating the stop state for the step and a randomized_step
-            # has not previously been created, do nothing and return from this method
-            else:
-                return
+            # Create a random step and save it in self.randomized_step
+            step = self.rows[0]*8 + random.randint(0, self.sequence_length-1)
 
         step_state = self.step_states[step % self.sequence_length]
 
         # Send a tick to the view and a drum note out if this step is turned
         # on and not muted.
-        if state and step_state and not self.muted:
+        if step_state and not self.muted:
             self.view.update(step, lpview.NOTE_PLAYING)
             self.drum_out.send_message([144, self.note_num, 127])
-
-        elif state:
+        else:
             self.view.update(step, lpview.NOTE_PLAYING)
 
-        elif not state and step_state and not self.muted:
-            self.view.update(step, lpview.NOTE_ON)
-            self.drum_out.send_message([144, self.note_num, 0])
-
-        elif not state and step_state and self.muted:
-            self.view.update(step, lpview.NOTE_MUTED)
-
-        elif not state and not step_state:
-            self.view.update(step, lpview.NOTE_OFF)
+        self.playing_step = step
