@@ -11,10 +11,20 @@ print('Opening port \'{0}\' for output'.format(midi_out_name))
 
 class GlobalLpView(object):
     def display_playing(self, state):
+        # Use the right arrow button to toggle playing
+        playing_button_cc = 107
         if state:
-            lp_midi_out.send_message([176, 107, 48])
+            lp_midi_out.send_message([176, playing_button_cc, 48])
         else:
-            lp_midi_out.send_message([176, 107,  0])
+            lp_midi_out.send_message([176, playing_button_cc,  0])
+
+    def display_randomize(self, state):
+        # Use the mixer button to toggle randomization of steps
+        randomize_button_cc = 111
+        if state:
+            lp_midi_out.send_message([176, randomize_button_cc, 48])
+        else:
+            lp_midi_out.send_message([176, randomize_button_cc,  0])
 
 class LpView(object):
     def __init__(self, rows):

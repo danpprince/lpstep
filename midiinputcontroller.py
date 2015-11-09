@@ -32,3 +32,6 @@ class MidiInputController(object):
                 # Right arrow button pressed
                 sequencermodel.toggle_playing()
 
+            elif cc_num == 111:
+                # Mixer button pressed
+                sequencermodel.toggle_randomize()

@@ -1,16 +1,25 @@
+import random
+
 import lpview
 
 sequencer_playing = False
+randomize         = False
 
 global_view = lpview.GlobalLpView()
 
 def toggle_playing():
     global sequencer_playing
     sequencer_playing = not sequencer_playing
-
     global_view.display_playing(sequencer_playing)
     
+def toggle_randomize():
+    global randomize
+    randomize = not randomize
+    global_view.display_randomize(randomize)
+    
 class SequencerModel(object):
+    randomized_step = None
+
     def __init__(self, rows, sequence_length, note_num, drum_out):
         self.rows = rows
         self.sequence_length = sequence_length
@@ -70,7 +79,26 @@ class SequencerModel(object):
         self.view.clear()
 
     def tick(self, step, state):
-        step = self.rows[0]*8 + (step % self.sequence_length)
+        if not randomize:
+            step = self.rows[0]*8 + (step % self.sequence_length)
+        else:
+            # If this tick is indicating the start state for the step, create a random
+            # step and save it in self.randomized_step
+            if state:
+                self.randomized_step = self.rows[0]*8 + random.randint(0, self.sequence_length-1)
+                step = self.randomized_step
+
+            # If this tick is indicating the stop state for the step and a randomized_step
+            # has previously been created, use the previously created randomized_step for step
+            # in order to send the corresponding note off.
+            elif self.randomized_step:
+                step = self.randomized_step
+
+            # If this tick is indicating the stop state for the step and a randomized_step
+            # has not previously been created, do nothing and return from this method
+            else:
+                return
+
         step_state = self.step_states[step % self.sequence_length]
 
         # Send a tick to the view and a drum note out if this step is turned
