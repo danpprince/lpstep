@@ -38,13 +38,21 @@ class LpView(object):
         note_num = step_row*16 + step_col
 
         if state == NOTE_PLAYING:
-            lp_midi_out.send_message([144, note_num, 2 << 4])
+            lp_midi_out.send_message([144, note_num, 3 << 4])
         elif state == NOTE_ON:
-            lp_midi_out.send_message([144, note_num, 127])
+            # Alternate the color for active steps between sequences
+            if self.rows[0] == 0 or self.rows[0] == 6:
+                green = 2
+                red   = 1
+                lp_midi_out.send_message([144, note_num, (green << 4) + red])
+            else:
+                green = 1
+                red   = 2
+                lp_midi_out.send_message([144, note_num, (green << 4) + red])
         elif state == NOTE_MUTED:
-            lp_midi_out.send_message([144, note_num, 13])
+            lp_midi_out.send_message([144, note_num,  1])
         else:
-            lp_midi_out.send_message([144, note_num, 0])
+            lp_midi_out.send_message([144, note_num,  0])
 
     def mute_display(self, state, rows):
         if len(rows) == 2:
