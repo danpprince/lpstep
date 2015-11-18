@@ -28,7 +28,15 @@ class MidiInputController(object):
         elif message[0] == 176 and message[2] == 127:
             cc_num = message[1]
 
-            if cc_num == 107:
+            if cc_num == 104:
+                # Up arrow button pressed
+                sequencermodel.increase_velocity()
+
+            elif cc_num == 105:
+                # Down arrow button pressed
+                sequencermodel.decrease_velocity()
+
+            elif cc_num == 107:
                 # Right arrow button pressed
                 sequencermodel.toggle_playing()
 

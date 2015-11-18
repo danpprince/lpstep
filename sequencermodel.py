@@ -6,7 +6,24 @@ import notestates
 sequencer_playing = False
 randomize         = False
 
-global_view = lpview.GlobalLpView()
+input_velocity = notestates.NOTE_VEL_HIGH
+global_view = None
+
+def init_view():
+    global global_view
+    global_view = lpview.GlobalLpView(input_velocity)
+
+def increase_velocity():
+    global input_velocity
+    if input_velocity == notestates.NOTE_VEL_LOW:
+        input_velocity = notestates.NOTE_VEL_HIGH
+    global_view.display_velocity(input_velocity)
+
+def decrease_velocity():
+    global input_velocity
+    if input_velocity == notestates.NOTE_VEL_HIGH:
+        input_velocity = notestates.NOTE_VEL_LOW
+    global_view.display_velocity(input_velocity)
 
 def toggle_playing():
     global sequencer_playing
@@ -27,7 +44,7 @@ class SequencerModel(object):
         self.note_num = note_num
         self.drum_out = drum_out
 
-        self.step_states = [False for i in range(sequence_length)]
+        self.step_states = [notestates.NOTE_OFF for i in range(sequence_length)]
 
         self.muted = False
 
@@ -37,15 +54,23 @@ class SequencerModel(object):
         self.view = view
 
     def toggle(self, step):
-        step_state = not self.step_states[step % self.sequence_length]
+        step_state = self.step_states[step % self.sequence_length]
+
+        if step_state == notestates.NOTE_OFF:
+            step_state = input_velocity
+        else:
+            step_state = notestates.NOTE_OFF
+
         self.step_states[step % self.sequence_length] = step_state
 
-        if step_state and not self.muted:
-            self.view.update(step, lpview.NOTE_ON)
-        elif step_state and self.muted:
-            self.view.update(step, lpview.NOTE_MUTED)
+        if not self.muted:
+            self.view.update(step, step_state)
+        elif step_state == notestates.NOTE_VEL_LOW:
+            self.view.update(step, notestates.NOTE_MUTED_LOW)
+        elif step_state == notestates.NOTE_VEL_HIGH:
+            self.view.update(step, notestates.NOTE_MUTED_HIGH)
         else:
-            self.view.update(step, lpview.NOTE_OFF)
+            self.view.update(step, notestates.NOTE_OFF)
 
         return self.step_states
 
@@ -58,10 +83,12 @@ class SequencerModel(object):
         for step_idx, step in enumerate(self.step_states):
             step_idx = self.rows[0]*8 + (step_idx % self.sequence_length)
 
-            if step and self.muted:
-                self.view.update(step_idx, lpview.NOTE_MUTED)
+            if step == notestates.NOTE_VEL_LOW and self.muted:
+                self.view.update(step_idx, notestates.NOTE_MUTED_LOW)
+            elif step == notestates.NOTE_VEL_HIGH and self.muted:
+                self.view.update(step_idx, notestates.NOTE_MUTED_HIGH)
             elif step and not self.muted:
-                self.view.update(step_idx, lpview.NOTE_ON)
+                self.view.update(step_idx, step)
 
     def in_range(self, row):
         if len(self.rows) == 1:
@@ -88,12 +115,14 @@ class SequencerModel(object):
         step_state = self.step_states[step % self.sequence_length]
 
         if step_state and not self.muted:
-            self.view.update(step, lpview.NOTE_ON)
+            self.view.update(step, step_state)
             self.drum_out.send_message([144, self.note_num, 0])
-        elif step_state and self.muted:
-            self.view.update(step, lpview.NOTE_MUTED)
+        elif step_state == notestates.NOTE_VEL_LOW and self.muted:
+            self.view.update(step, notestates.NOTE_MUTED_LOW)
+        elif step_state == notestates.NOTE_VEL_HIGH and self.muted:
+            self.view.update(step, notestates.NOTE_MUTED_HIGH)
         elif not step_state:
-            self.view.update(step, lpview.NOTE_OFF)
+            self.view.update(step, notestates.NOTE_OFF)
 
         self.playing_step = None
 
@@ -109,9 +138,12 @@ class SequencerModel(object):
         # Send a tick to the view and a drum note out if this step is turned
         # on and not muted.
         if step_state and not self.muted:
-            self.view.update(step, lpview.NOTE_PLAYING)
-            self.drum_out.send_message([144, self.note_num, 127])
+            self.view.update(step, notestates.NOTE_PLAYING)
+            if step_state == notestates.NOTE_VEL_HIGH:
+                self.drum_out.send_message([144, self.note_num, 127])
+            elif step_state == notestates.NOTE_VEL_LOW:
+                self.drum_out.send_message([144, self.note_num, 60])
         else:
-            self.view.update(step, lpview.NOTE_PLAYING)
+            self.view.update(step, notestates.NOTE_PLAYING)
 
         self.playing_step = step

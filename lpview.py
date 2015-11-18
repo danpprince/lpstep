@@ -1,16 +1,26 @@
 import notestates
 import rtmidi.midiutil as midiutil
 
-NOTE_OFF     = 0
-NOTE_MUTED   = 1
-NOTE_ON      = 2
-NOTE_PLAYING = 3
-
 # Get outputs that contain the string 'Launchpad'
 lp_midi_out, midi_out_name = midiutil.open_midiport(port='Launchpad', type_='output')
 print('Opening port \'{0}\' for output'.format(midi_out_name))
 
 class GlobalLpView(object):
+    def __init__(self, input_velocity):
+        self.display_velocity(input_velocity)
+
+    def display_velocity(self, velocity):
+        # Use the up and down arrow buttons to indicate velocity
+        vel_bit_1_button_cc = 104
+        vel_bit_0_button_cc = 105
+
+        if velocity == notestates.NOTE_VEL_LOW:
+            lp_midi_out.send_message([176, vel_bit_1_button_cc,  0])
+            lp_midi_out.send_message([176, vel_bit_0_button_cc, 48])
+        else:
+            lp_midi_out.send_message([176, vel_bit_1_button_cc, 48])
+            lp_midi_out.send_message([176, vel_bit_0_button_cc,  0])
+
     def display_playing(self, state):
         # Use the right arrow button to toggle playing
         playing_button_cc = 107
@@ -38,9 +48,19 @@ class LpView(object):
 
         note_num = step_row*16 + step_col
 
-        if state == NOTE_PLAYING:
+        if state == notestates.NOTE_PLAYING:
             lp_midi_out.send_message([144, note_num, 3 << 4])
-        elif state == NOTE_ON:
+        elif state == notestates.NOTE_VEL_HIGH:
+            # Alternate the color for active steps between sequences
+            if self.rows[0] == 0 or self.rows[0] == 6:
+                green = 3
+                red   = 2
+                lp_midi_out.send_message([144, note_num, (green << 4) + red])
+            else:
+                green = 2
+                red   = 3
+                lp_midi_out.send_message([144, note_num, (green << 4) + red])
+        elif state == notestates.NOTE_VEL_LOW:
             # Alternate the color for active steps between sequences
             if self.rows[0] == 0 or self.rows[0] == 6:
                 green = 2
@@ -50,8 +70,10 @@ class LpView(object):
                 green = 1
                 red   = 2
                 lp_midi_out.send_message([144, note_num, (green << 4) + red])
-        elif state == NOTE_MUTED:
+        elif state == notestates.NOTE_MUTED_LOW:
             lp_midi_out.send_message([144, note_num,  1])
+        elif state == notestates.NOTE_MUTED_HIGH:
+            lp_midi_out.send_message([144, note_num,  3])
         else:
             lp_midi_out.send_message([144, note_num,  0])
 

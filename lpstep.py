@@ -6,7 +6,7 @@ from midiinputcontroller import MidiInputController
 from sequencermodel import SequencerModel
 import sequencermodel
 
-bpm = 100
+bpm = 120
 
 
 if __name__ == '__main__':
@@ -27,6 +27,8 @@ if __name__ == '__main__':
     midi_input_controller = MidiInputController(sequencer_models) 
 
     midi_in.set_callback(midi_input_controller)
+
+    sequencermodel.init_view()
 
     # Set the period in seconds for one sixteenth note
     period_sec = 60.0/bpm / 4
