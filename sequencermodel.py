@@ -1,6 +1,7 @@
 import random
 
 import lpview
+import notestates
 
 sequencer_playing = False
 randomize         = False

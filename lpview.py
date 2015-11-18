@@ -1,3 +1,4 @@
+import notestates
 import rtmidi.midiutil as midiutil
 
 NOTE_OFF     = 0
