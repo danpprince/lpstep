@@ -3,12 +3,13 @@ import rtmidi.midiutil as midiutil
 import time
 
 import constants
+import extseq
+from extseq import ExternalSeq
 from midiinputcontroller import MidiInputController
-from sequencermodel import SequencerModel
 import sequencermodel
+from sequencermodel import SequencerModel
 
 bpm = 120
-
 
 if __name__ == '__main__':
     # Get inputs that contain the string 'Launchpad'
@@ -25,6 +26,14 @@ if __name__ == '__main__':
                         SequencerModel(   [6],  8, 41, drum_out),
                         SequencerModel(   [7],  8, 42, drum_out)]
 
+    # Initialize a MIDI in object for the external sequencer if the option
+    # has been enabled
+    if constants.USE_EXT_CLOCK:
+        clock_in, clock_in_name = midiutil.open_midiport(port='Live', type_='input')
+        print('Opening port \'{0}\' for clock'.format(clock_in_name))
+        clock_in.ignore_types(timing=False)
+        clock_in.set_callback(ExternalSeq(sequencer_models))
+
     midi_input_controller = MidiInputController(sequencer_models) 
 
     midi_in.set_callback(midi_input_controller)
@@ -36,7 +45,7 @@ if __name__ == '__main__':
 
     step = 0
 
-    if not constants.USE_EXT_SEQUENCER:
+    if not constants.USE_EXT_CLOCK:
         while True:
             if sequencermodel.sequencer_playing:
                 # Step through each button at the specified bpm
@@ -55,3 +64,6 @@ if __name__ == '__main__':
                 step = 0
                 time.sleep(0.1)
 
+    elif constants.USE_EXT_CLOCK:
+        while True:
+            time.sleep(1)
