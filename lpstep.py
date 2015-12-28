@@ -2,6 +2,7 @@ import rtmidi
 import rtmidi.midiutil as midiutil
 import time
 
+import constants
 from midiinputcontroller import MidiInputController
 from sequencermodel import SequencerModel
 import sequencermodel
@@ -33,24 +34,24 @@ if __name__ == '__main__':
     # Set the period in seconds for one sixteenth note
     period_sec = 60.0/bpm / 4
 
-    note_len_sec = 0.04
-
     step = 0
-    max_num_steps = 32
 
-    while True:
-        if sequencermodel.sequencer_playing:
-            # Step through each button at the specified bpm
-            for sm in sequencer_models:
-                sm.start_note(step)
+    if not constants.USE_EXT_SEQUENCER:
+        while True:
+            if sequencermodel.sequencer_playing:
+                # Step through each button at the specified bpm
+                for sm in sequencer_models:
+                    sm.start_note(step)
 
-            time.sleep(note_len_sec)
+                time.sleep(constants.NOTE_LEN_SEC)
 
-            for sm in sequencer_models:
-                sm.stop_note()
+                for sm in sequencer_models:
+                    sm.stop_note()
 
-            step = (step + 1) % max_num_steps
+                step = (step + 1) % constants.MAX_NUM_STEPS
 
-            time.sleep(period_sec - note_len_sec)
-        else:
-            step = 0
+                time.sleep(period_sec - constants.NOTE_LEN_SEC)
+            else:
+                step = 0
+                time.sleep(0.1)
+
