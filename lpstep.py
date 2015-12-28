@@ -9,15 +9,18 @@ from midiinputcontroller import MidiInputController
 import sequencermodel
 from sequencermodel import SequencerModel
 
-bpm = 120
 
 if __name__ == '__main__':
-    # Get inputs that contain the string 'Launchpad'
-    midi_in, midi_in_name = midiutil.open_midiport(port='Launchpad', type_='input')
+    # Get inputs that contain the controller port name string
+    midi_in, midi_in_name = midiutil.open_midiport(
+            port=constants.CONTROLLER_PORT_NAME, 
+            type_='input')
     print('Opening port \'{0}\' for input'.format(midi_in_name))
 
-    # Get outputs that contain the string 'loopMIDI'
-    drum_out, drum_out_name = midiutil.open_midiport(port='loopMIDI', type_='output')
+    # Get outputs that contain the drum out port name string
+    drum_out, drum_out_name = midiutil.open_midiport(
+            port=constants.DRUM_OUT_PORT_NAME, 
+            type_='output')
     print('Opening port \'{0}\' for output'.format(drum_out_name))
 
     # Initialize sequencer models
@@ -29,7 +32,9 @@ if __name__ == '__main__':
     # Initialize a MIDI in object for the external sequencer if the option
     # has been enabled
     if constants.USE_EXT_CLOCK:
-        clock_in, clock_in_name = midiutil.open_midiport(port='Live', type_='input')
+        clock_in, clock_in_name = midiutil.open_midiport(
+                port=constants.EXT_CLOCK_PORT_NAME, 
+                type_='input')
         print('Opening port \'{0}\' for clock'.format(clock_in_name))
         clock_in.ignore_types(timing=False)
         clock_in.set_callback(ExternalSeq(sequencer_models))
@@ -41,7 +46,7 @@ if __name__ == '__main__':
     sequencermodel.init_view()
 
     # Set the period in seconds for one sixteenth note
-    period_sec = 60.0/bpm / 4
+    period_sec = 60.0/constants.INTERNAL_BPM / 4
 
     step = 0
 
