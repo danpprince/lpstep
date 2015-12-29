@@ -1,6 +1,7 @@
 import time
 
 import constants
+import sequencermodel
 
 sequencer_playing = True
 
@@ -16,9 +17,6 @@ class ExternalSeq(object):
     # step is used to count the current beat in the drum sequence
     step = 0
 
-    def __init__(self, s_m):
-        self.sequencer_models = s_m
-
     def __call__(self, event, data=None):
         global sequencer_playing
 
@@ -27,19 +25,21 @@ class ExternalSeq(object):
         # Get start message
         if message[0] == 250:
             sequencer_playing = True
-                        
+
         # Get clock message
         if message[0] == 250 or message[0] == 248:
             # Check for sixtenth note
             if self.step_counter % 6 == 0:
                 # Step through each button at the specified bpm
-                for sm in self.sequencer_models:
-                    sm.start_note(self.step)
+                for page in sequencermodel.sequencer_models:
+                    for sm in page:
+                        sm.start_note(self.step)
 
                 time.sleep(constants.NOTE_LEN_SEC)
 
-                for sm in self.sequencer_models:
-                    sm.stop_note()
+                for page in sequencermodel.sequencer_models:
+                    for sm in page:
+                        sm.stop_note()
 
                 self.step = (self.step + 1) % constants.MAX_NUM_STEPS
                 self.step_counter = 0
