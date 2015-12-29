@@ -160,3 +160,32 @@ class SequencerModel(object):
             self.view.update(step, notestates.NOTE_PLAYING)
 
         self.playing_step = step
+
+    def display(self):
+        for step, step_state in enumerate(self.step_states):
+            step = step + self.rows[0]*8
+            if not self.muted:
+                self.view.update(step, step_state)
+            elif step_state == notestates.NOTE_VEL_LOW:
+                self.view.update(step, notestates.NOTE_MUTED_LOW)
+            elif step_state == notestates.NOTE_VEL_HIGH:
+                self.view.update(step, notestates.NOTE_MUTED_HIGH)
+            else:
+                self.view.update(step, notestates.NOTE_OFF)
+
+
+# Get outputs that contain the drum out port name string
+drum_out, drum_out_name = midiutil.open_midiport(
+        port=constants.DRUM_OUT_PORT_NAME, 
+        type_='output')
+print('Opening port \'{0}\' for output'.format(drum_out_name))
+
+# Initialize sequencer models
+sequencer_models = [[SequencerModel([0, 3], 32, 38, drum_out),
+                     SequencerModel([4, 5], 16, 39, drum_out),
+                     SequencerModel(   [6],  8, 41, drum_out),
+                     SequencerModel(   [7],  8, 42, drum_out)],
+
+                    [SequencerModel([0, 3], 32, 43, drum_out),
+                     SequencerModel([4, 7], 32, 44, drum_out)]]
+
