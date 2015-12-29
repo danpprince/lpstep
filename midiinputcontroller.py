@@ -1,9 +1,6 @@
 import sequencermodel
 
 class MidiInputController(object):
-    def __init__(self, sequencer_models):
-        self.sequencer_models = sequencer_models
-
     def __call__(self, event, data=None):
         message, deltatime = event
 
@@ -16,11 +13,11 @@ class MidiInputController(object):
 
             if col == 8:
                 # Mute the sequencer in this row
-                for sm in self.sequencer_models:
+                for sm in sequencermodel.get_current_seq_page():
                     if sm.in_range(row):
                         sm.mute_toggle()
             else:
-                for sm in self.sequencer_models:
+                for sm in sequencermodel.get_current_seq_page():
                     if sm.in_range(row):
                         sm.toggle(8*row + col)
                         
@@ -39,6 +36,14 @@ class MidiInputController(object):
             elif cc_num == 107:
                 # Right arrow button pressed
                 sequencermodel.toggle_playing()
+
+            elif cc_num == 109:
+                # User 1 button pressed
+                sequencermodel.select_seq_page(0)
+
+            elif cc_num == 110:
+                # User 2 button pressed
+                sequencermodel.select_seq_page(1)
 
             elif cc_num == 111:
                 # Mixer button pressed

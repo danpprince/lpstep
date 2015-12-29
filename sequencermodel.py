@@ -9,6 +9,11 @@ randomize         = False
 input_velocity = notestates.NOTE_VEL_HIGH
 global_view = None
 
+current_page = 0
+
+def get_current_seq_page():
+    return sequencer_models[current_page]
+
 def init_view():
     global global_view
     global_view = lpview.GlobalLpView(input_velocity)
@@ -29,6 +34,14 @@ def toggle_playing():
     global sequencer_playing
     sequencer_playing = not sequencer_playing
     global_view.display_playing(sequencer_playing)
+    
+def select_seq_page(page_num):
+    global current_page
+    current_page = page_num
+    global_view.display_page(page_num)
+
+    for sm in get_current_seq_page():
+        sm.display()
     
 def toggle_randomize():
     global randomize
