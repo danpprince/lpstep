@@ -1,5 +1,7 @@
 import random
+import rtmidi.midiutil as midiutil
 
+import constants
 import lpview
 import notestates
 
@@ -116,7 +118,7 @@ class SequencerModel(object):
             return 0
 
     def clear(self):
-        self.step_states = [False for i in range(self.sequence_length)]
+        self.step_states = [notestates.NOTE_OFF for i in range(sequence_length)]
         self.view.clear()
 
     def stop_note(self):
@@ -128,14 +130,20 @@ class SequencerModel(object):
         step_state = self.step_states[step % self.sequence_length]
 
         if step_state and not self.muted:
-            self.view.update(step, step_state)
+            # Update the view if this sequencer is in the displayed page
+            if self in get_current_seq_page():
+                self.view.update(step, step_state)
+
             self.drum_out.send_message([144, self.note_num, 0])
         elif step_state == notestates.NOTE_VEL_LOW and self.muted:
-            self.view.update(step, notestates.NOTE_MUTED_LOW)
+            if self in get_current_seq_page():
+                self.view.update(step, notestates.NOTE_MUTED_LOW)
         elif step_state == notestates.NOTE_VEL_HIGH and self.muted:
-            self.view.update(step, notestates.NOTE_MUTED_HIGH)
+            if self in get_current_seq_page():
+                self.view.update(step, notestates.NOTE_MUTED_HIGH)
         elif not step_state:
-            self.view.update(step, notestates.NOTE_OFF)
+            if self in get_current_seq_page():
+                self.view.update(step, notestates.NOTE_OFF)
 
         self.playing_step = None
 
@@ -151,13 +159,18 @@ class SequencerModel(object):
         # Send a tick to the view and a drum note out if this step is turned
         # on and not muted.
         if step_state and not self.muted:
-            self.view.update(step, notestates.NOTE_PLAYING)
+            # Update the view if this sequencer is in the displayed page
+            if self in get_current_seq_page():
+                self.view.update(step, notestates.NOTE_PLAYING)
+
             if step_state == notestates.NOTE_VEL_HIGH:
                 self.drum_out.send_message([144, self.note_num, 127])
             elif step_state == notestates.NOTE_VEL_LOW:
                 self.drum_out.send_message([144, self.note_num, 60])
         else:
-            self.view.update(step, notestates.NOTE_PLAYING)
+            # Update the view if this sequencer is in the displayed page
+            if self in get_current_seq_page():
+                self.view.update(step, notestates.NOTE_PLAYING)
 
         self.playing_step = step
 
