@@ -1,5 +1,7 @@
-import notestates
 import rtmidi.midiutil as midiutil
+
+import notestates
+import sequencermodel
 
 # Get outputs that contain the string 'Launchpad'
 lp_midi_out, midi_out_name = midiutil.open_midiport(port='Launchpad', type_='output')
@@ -28,6 +30,17 @@ class GlobalLpView(object):
             lp_midi_out.send_message([176, playing_button_cc, 48])
         else:
             lp_midi_out.send_message([176, playing_button_cc,  0])
+
+    def display_page(self, page_num):
+        # Use the right arrow button to toggle playing
+        user1_button_cc = 109
+        user2_button_cc = 110
+        if page_num == 0:
+            lp_midi_out.send_message([176, user1_button_cc, 48])
+            lp_midi_out.send_message([176, user2_button_cc,  0])
+        else:
+            lp_midi_out.send_message([176, user1_button_cc,  0])
+            lp_midi_out.send_message([176, user2_button_cc, 48])
 
     def display_randomize(self, state):
         # Use the mixer button to toggle randomization of steps
