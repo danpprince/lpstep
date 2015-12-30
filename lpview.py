@@ -10,6 +10,7 @@ print('Opening port \'{0}\' for output'.format(midi_out_name))
 class GlobalLpView(object):
     def __init__(self, input_velocity):
         self.display_velocity(input_velocity)
+        self.display_page(0)
 
     def display_velocity(self, velocity):
         # Use the up and down arrow buttons to indicate velocity
