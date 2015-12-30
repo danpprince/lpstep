@@ -175,6 +175,8 @@ class SequencerModel(object):
         self.playing_step = step
 
     def display(self):
+        self.view.mute_display(self.muted, self.rows)
+
         for step, step_state in enumerate(self.step_states):
             step = step + self.rows[0]*8
             if not self.muted:
