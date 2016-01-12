@@ -198,6 +198,8 @@ sequencer_models = [[SequencerModel([0, 3], 32, 38, drum_out),
                      SequencerModel(   [6],  8, 41, drum_out),
                      SequencerModel(   [7],  8, 42, drum_out)],
 
-                    [SequencerModel([0, 3], 32, 43, drum_out),
-                     SequencerModel([4, 7], 32, 44, drum_out)]]
+                    [SequencerModel([0, 1], 16, 43, drum_out),
+                     SequencerModel([2, 3], 16, 44, drum_out),
+                     SequencerModel([4, 5], 16, 45, drum_out),
+                     SequencerModel([6, 7], 16, 46, drum_out)]]
 
