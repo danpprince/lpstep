@@ -52,9 +52,16 @@ class GlobalLpView(object):
             lp_midi_out.send_message([176, randomize_button_cc,  0])
 
 class LpView(object):
+    next_seq_even = False
+
     def __init__(self, rows):
         self.rows = rows
         self.clear()
+
+        # Use the next_seq_even class variable in order to alternate colors
+        # between sequences to improve clarity for users
+        self.even_seq = LpView.next_seq_even
+        LpView.next_seq_even = not LpView.next_seq_even
 
     def update(self, step, state):
         step_row = step / 8
@@ -66,7 +73,7 @@ class LpView(object):
             lp_midi_out.send_message([144, note_num, 3 << 4])
         elif state == notestates.NOTE_VEL_HIGH:
             # Alternate the color for active steps between sequences
-            if self.rows[0] == 0 or self.rows[0] == 6:
+            if self.even_seq:
                 green = 3
                 red   = 2
                 lp_midi_out.send_message([144, note_num, (green << 4) + red])
@@ -76,7 +83,7 @@ class LpView(object):
                 lp_midi_out.send_message([144, note_num, (green << 4) + red])
         elif state == notestates.NOTE_VEL_LOW:
             # Alternate the color for active steps between sequences
-            if self.rows[0] == 0 or self.rows[0] == 6:
+            if self.even_seq:
                 green = 2
                 red   = 1
                 lp_midi_out.send_message([144, note_num, (green << 4) + red])
