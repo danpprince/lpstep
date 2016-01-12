@@ -65,9 +65,6 @@ class SequencerModel(object):
 
         self.view = lpview.LpView(rows)
 
-    def set_view(self, view):
-        self.view = view
-
     def toggle(self, step):
         step_state = self.step_states[step % self.sequence_length]
 
